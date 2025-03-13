@@ -1,15 +1,12 @@
 #include "Main.h"
 
-INT 
-WINAPI 
-WinMain(
-	_In_ HINSTANCE hInstance,
-	_In_opt_ HINSTANCE hPrevInstance,
-	_In_ LPSTR lpCmdLine, 
-	_In_ INT nShowCmd
+INT
+__cdecl
+main(
+	VOID
 ) {
 	// TODO: Make this a command-Line app as well.
-
+	
 	/* RANDOM OVERWRITE */
 	/*LPSTR overwriteFilename = "S:\\sfd test\\Test File.mp4";
 	HANDLE file = CreateFile(overwriteFilename, GENERIC_ALL, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH, NULL);

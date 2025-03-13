@@ -2,6 +2,8 @@
 #include <Windows.h>
 #include <WinBase.h>
 #include <WinUser.h>
+#include <strsafe.h>
+#include <stdio.h>
 
 #pragma comment(lib, "BCrypt.lib")
 
