@@ -5,8 +5,11 @@
 #include <strsafe.h>
 #include <stdio.h>
 #include <Shlwapi.h>
+#include <ntstatus.h>
+#include <winternl.h>
 
 #pragma comment(lib, "BCrypt.lib")
+#pragma comment(lib, "ntdll.lib")
 
 #define DEFAULT_OVERWRITE_SIZE 2000000
 
@@ -29,6 +32,22 @@ typedef struct SecureDeletorArguments {
 	SDSPECIALARGUMENTS sdsa; // Special arguments required.
 } SDARGUMENTS, *PSDARGUMENTS;
 
+/* Special Definitions. */
+typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO {
+	USHORT UniqueProcessId;
+	USHORT CreatorBackTraceIndex;
+	UCHAR ObjectTypeIndex;
+	UCHAR HandleAttributes;
+	USHORT HandleValue;
+	PVOID Object;
+	ULONG GrantedAccess;
+} SYSTEM_HANDLE_TABLE_ENTRY_INFO, *PSYSTEM_HANDLE_TABLE_ENTRY_INFO;
+
+typedef struct _SYSTEM_HANDLE_INFORMATION {
+	ULONG NumberOfHandles;
+	SYSTEM_HANDLE_TABLE_ENTRY_INFO Handles[ANYSIZE_ARRAY];
+} SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
+
 /* Print Definitions. */
 static CONST LPWSTR helpString = L"\r\nSecureFileDeletor.exe {-file <abs_path> | -dir <abs_path>} [-default] [-force] [-log <output>] [-verbose]\r\n\r\nSecureFileDeletor.exe {-file <abs_path> | -dir <abs_path>} [-recurse1] {-rand | -zero} [-delete] [-force] [-log <output>] [-verbose] [-passes <n>]\r\n\r\nParameters:\r\n\r\n-file <abs_path> | -dir <abs_path> -> Selects a file or a directory for overwriting.\r\n";
 
@@ -41,3 +60,4 @@ VOID WINAPI SecureDeletorFileN(PSDARGUMENTS sda);
 VOID WINAPI SecureDeletorDirectoryN(PSDARGUMENTS sda);
 VOID WINAPI SecureDeletorRandomOverwrite(HANDLE hFile, LARGE_INTEGER fileSize);
 VOID WINAPI SecureDeletorZeroOverwrite(HANDLE hFile, LARGE_INTEGER fileSize);
+VOID WINAPI SecureDeletorForce(LPWSTR path);
