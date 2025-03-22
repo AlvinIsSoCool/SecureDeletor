@@ -120,23 +120,38 @@ VOID WINAPI SecureDeletorForce(LPWSTR path) {
 	LookupPrivilegeValue(NULL, SE_TAKE_OWNERSHIP_NAME, &tokenPriv->Privileges[4].Luid);
 	tokenPriv->Privileges[4].Attributes = SE_PRIVILEGE_ENABLED;
 
-	if (!AdjustTokenPrivileges(hToken, FALSE, tokenPriv, 0, NULL, 0)) wprintf("Token privileges could not be set. Proceeding without...");
+	if (!AdjustTokenPrivileges(hToken, FALSE, tokenPriv, 0, NULL, 0)) wprintf(L"Token privileges could not be set. Proceeding without...");
 
 	HeapFree(GetProcessHeap(), 0, tokenPriv);
 	CloseHandle(hToken);
 
-	PSYSTEM_HANDLE_INFORMATION sysInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SYSTEM_HANDLE_INFORMATION));
-	ULONG ReturnLength = 0;
+	ForceStopProcesses();
+}
 
-	if (!NT_SUCCESS(NtQuerySystemInformation(0x10, sysInfo, sizeof(SYSTEM_HANDLE_INFORMATION), &ReturnLength))) {
-		sysInfo = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sysInfo, ReturnLength);
-		NtQuerySystemInformation(0x10, sysInfo, ReturnLength, &ReturnLength);
-		//MessageBox(NULL, L"", L"", MB_OK);
+VOID WINAPI ForceStopProcesses() {
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	HANDLE hProcess = 0;
+
+	PROCESSENTRY32W pe32w = { 0 };
+	pe32w.dwSize = sizeof(PROCESSENTRY32W);
+
+	LPWSTR cModuleName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, WMAX_PATH + 1);
+	GetModuleFileName(NULL, cModuleName, WMAX_PATH);
+
+	Process32First(hSnapshot, &pe32w);
+
+	BOOL criticalProcess = FALSE;
+	while (Process32Next(hSnapshot, &pe32w)) {
+		for (INT x = 0; x < procWhitelistSize; x++) {
+			if (lstrcmp(pe32w.szExeFile, procWhitelist[x]) != 0 && lstrcmp(pe32w.szExeFile, cModuleName) != 0) criticalProcess = FALSE;
+			else {
+				criticalProcess = TRUE;
+				break;
+			}
+		}
+		if (!criticalProcess) {
+			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32w.th32ProcessID);
+			TerminateProcess(hProcess, 0);
+		}
 	}
-
-	for (ULONG l = 0; l < sysInfo->NumberOfHandles; l++) {
-		//if 
-		;
-	}
-
 }
